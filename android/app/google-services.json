@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "233944847319",
+    "project_id": "torent-4f9bc",
+    "storage_bucket": "torent-4f9bc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:233944847319:android:ac6802f41d1937213bb192",
+        "android_client_info": {
+          "package_name": "com.example.to_rent"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBaBbt7TrpccGDVBZfDLbp2Ps5M_vX6KwQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
