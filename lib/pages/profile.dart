@@ -12,7 +12,7 @@ class ProfileFeed extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Profile Card
-              ProfileCard(),
+              ProfileCard(initialRating: 4), // Example initial rating
 
               // Posts Card
               PostsCard(),
@@ -24,8 +24,36 @@ class ProfileFeed extends StatelessWidget {
   }
 }
 
-class ProfileCard extends StatelessWidget {
-  const ProfileCard({Key? key}) : super(key: key);
+class ProfileCard extends StatefulWidget {
+  final int initialRating;
+
+  const ProfileCard({Key? key, required this.initialRating}) : super(key: key);
+
+  @override
+  _ProfileCardState createState() => _ProfileCardState();
+}
+
+class _ProfileCardState extends State<ProfileCard> {
+  late int _currentRating;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentRating = widget.initialRating; // Set initial rating from backend
+  }
+
+  Future<void> _updateRating(int newRating) async {
+    // Simulate sending the new rating to the backend
+    await Future.delayed(Duration(seconds: 1));
+    print('Rating updated to backend: $newRating'); // Replace with actual API call
+  }
+
+  void _onStarTapped(int rating) {
+    setState(() {
+      _currentRating = rating; // Update rating visually
+    });
+    _updateRating(rating); // Send new rating to backend
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +62,7 @@ class ProfileCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
-          textDirection: TextDirection.rtl, // Reverses row direction for RTL layout
+          textDirection: TextDirection.rtl, // RTL layout
           children: [
             CircleAvatar(
               radius: 30,
@@ -44,7 +72,7 @@ class ProfileCard extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end, // Aligns text to the right
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   const Text(
                     'الاسم الشخصي',
@@ -55,13 +83,16 @@ class ProfileCard extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end, // Aligns stars to the right
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: List.generate(
                       5,
-                      (index) => Icon(
-                        index < 4 ? Icons.star : Icons.star_half,
-                        color: Colors.orange,
-                        size: 25,
+                      (index) => GestureDetector(
+                        onTap: () => _onStarTapped(index + 1), // Set rating on tap
+                        child: Icon(
+                          Icons.star,
+                          color: index < _currentRating ? Colors.orange : Colors.grey,
+                          size: 25,
+                        ),
                       ),
                     ),
                   ),
@@ -71,10 +102,10 @@ class ProfileCard extends StatelessWidget {
             const SizedBox(width: 16),
             ElevatedButton.icon(
               onPressed: () {
-                // Add message functionality here
+                // Add message functionality
               },
               icon: const Icon(Icons.message, size: 18),
-              label: const Text('رسالة'), // Arabic for "Message"
+              label: const Text('تواصل'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
@@ -105,7 +136,7 @@ class PostsCard extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
-              'المنشورات الأخيرة', // Arabic for "Recent Posts"
+              'العروض',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -118,19 +149,11 @@ class PostsCard extends StatelessWidget {
             children: const [
               PostCard(
                 imageUrl: 'assets/vase.jpg',
-                description: 'مزهرية سيراميك مصنوعة يدوياً، تضيف لمسة من الأناقة لأي غرفة.', // Arabic description
+                description: 'مزهرية سيراميك مصنوعة يدوياً، تضيف لمسة من الأناقة لأي غرفة.',
               ),
               PostCard(
                 imageUrl: 'assets/handbag.jpg',
-                description: 'حقيبة يد جلدية أنيقة مع تفاصيل ذهبية، ملحق مثالي لأي مناسبة.', // Arabic description
-              ),
-                            PostCard(
-                imageUrl: 'assets/handbag.jpg',
-                description: 'حقيبة يد جلدية أنيقة مع تفاصيل ذهبية، ملحق مثالي لأي مناسبة.', // Arabic description
-              ),
-                            PostCard(
-                imageUrl: 'assets/handbag.jpg',
-                description: 'حقيبة يد جلدية أنيقة مع تفاصيل ذهبية، ملحق مثالي لأي مناسبة.', // Arabic description
+                description: 'حقيبة يد جلدية أنيقة مع تفاصيل ذهبية، ملحق مثالي لأي مناسبة.',
               ),
             ],
           ),
@@ -173,7 +196,7 @@ class PostCard extends StatelessWidget {
             child: Text(
               description,
               style: const TextStyle(fontSize: 16),
-              textDirection: TextDirection.rtl, // Sets text direction to RTL
+              textDirection: TextDirection.rtl,
             ),
           ),
         ],
