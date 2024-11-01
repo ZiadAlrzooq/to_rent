@@ -3,13 +3,38 @@ import 'package:flutter/material.dart';
 import '../widgets/background_widget.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/input_field.dart';
+import 'package:to_rent/services/auth_service.dart';
 
-class RegisterPage extends StatelessWidget {
+
+class RegisterPage extends StatefulWidget {
+  @override
+  _RegisterPageState createState() => _RegisterPageState();
+}
+
+
+class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+  bool _isRegistering = false;
+
+  void register() {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isRegistering = true;
+      });
+      final String username = usernameController.text;
+      final String email = emailController.text;
+      final String password = passwordController.text;
+      AuthService().registerWithEmailAndPassword(username, email, password);
+      setState(() {
+        _isRegistering = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,12 +108,9 @@ class RegisterPage extends StatelessWidget {
                     SizedBox(height: 20),
                     CustomButton(
                       text: 'تسجيل الحساب',
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // Handle registration action
-                        }
-                      },
+                      onPressed: register,
                       color: Colors.orange[700]!,
+                      isLoading: _isRegistering
                     ),
                     SizedBox(height: 20),
                     CustomButton(
