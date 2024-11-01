@@ -6,8 +6,10 @@ import 'pages/register_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_provider.dart';
+import 'pages/posts.dart';
+import 'widgets/protected_route.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(
@@ -31,6 +33,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => HomePage(),
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
+        '/posts': (context) => ProtectedRoute(child: Posts()),
       },
     );
   }

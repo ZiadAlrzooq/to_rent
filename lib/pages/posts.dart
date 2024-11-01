@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:to_rent/services/auth_service.dart';
+import 'package:to_rent/widgets/custom_app_bar.dart';
 class Posts extends StatelessWidget {
   final List<Map<String, String>> posts = [
     {
@@ -29,18 +30,19 @@ class Posts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              textDirection: TextDirection.rtl, // Right-to-left alignment
-              textAlign: TextAlign.right, // Align text to the right
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.right,
               decoration: InputDecoration(
-                hintText: '...أبحث', // Arabic placeholder
+                hintText: '...أبحث',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0), // Rounded corners
+                  borderRadius: BorderRadius.circular(30.0),
                 ),
               ),
               onChanged: (value) {
@@ -53,75 +55,79 @@ class Posts extends StatelessWidget {
               itemCount: posts.length,
               itemBuilder: (context, index) {
                 return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 16.0),
                   child: Row(
                     children: [
-                      // Image on the left with left margin
                       Container(
-                        width: 100, // Set the width percentage you prefer
-                        height: 100, // Match the height to the vertical space
-                        margin: const EdgeInsets.only(left: 8.0), // Add left margin to the image
+                        width: 100,
+                        height: 100,
+                        margin: const EdgeInsets.only(left: 8.0),
                         decoration: BoxDecoration(
                           image: DecorationImage(
                             image: NetworkImage(posts[index]['image']!),
-                            fit: BoxFit.cover, // Cover the entire area
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
-                      SizedBox(width: 8), // Space between image and text
-                      Expanded( // Take the remaining width
+                      SizedBox(width: 8),
+                      Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end, // Align text to the end
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Text(
                                 posts[index]['title']!,
-                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                textAlign: TextAlign.right, // Right align the title
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.right,
                               ),
-                              SizedBox(height: 4), // Space between title and username
+                              SizedBox(height: 4),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  // User Icon
                                   Text(
                                     posts[index]['username']!,
-                                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                                    textAlign: TextAlign.right, // Right align the username
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.grey),
+                                    textAlign: TextAlign.right,
                                   ),
-                                  SizedBox(width: 4), // Space between icon and username
-                                  Icon(Icons.person, size: 16, color: Colors.grey),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.person,
+                                      size: 16, color: Colors.grey),
                                 ],
                               ),
-                              SizedBox(height: 4), // Space between username and location/time
+                              SizedBox(height: 4),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.end, // Align to the end
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  // Location Icon
                                   Row(
                                     children: [
                                       Text(
                                         posts[index]['location']!,
-                                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                                        textAlign: TextAlign.right, // Right align the location
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.grey),
+                                        textAlign: TextAlign.right,
                                       ),
-                                      SizedBox(width: 4), // Space between icon and text
-                                      Icon(Icons.location_on, size: 16, color: Colors.grey),
+                                      SizedBox(width: 4),
+                                      Icon(Icons.location_on,
+                                          size: 16, color: Colors.grey),
                                     ],
                                   ),
-                                  SizedBox(width: 16), // Space between location and time
-                                  // Time Icon
+                                  SizedBox(width: 16),
                                   Row(
                                     children: [
                                       Text(
                                         posts[index]['time']!,
-                                        style: TextStyle(fontSize: 16, color: Colors.grey),
-                                        textAlign: TextAlign.right, // Right align the time
+                                        style: TextStyle(
+                                            fontSize: 16, color: Colors.grey),
+                                        textAlign: TextAlign.right,
                                       ),
-                                      SizedBox(width: 4), // Space between icon and text
-                                      Icon(Icons.access_time, size: 16, color: Colors.grey),
+                                      SizedBox(width: 4),
+                                      Icon(Icons.access_time,
+                                          size: 16, color: Colors.grey),
                                     ],
                                   ),
                                 ],
@@ -139,17 +145,19 @@ class Posts extends StatelessWidget {
         ],
       ),
       floatingActionButton: Container(
-        margin: const EdgeInsets.only(bottom: 16.0, right: 16.0), // Margin from bottom and right
+        margin: const EdgeInsets.only(bottom: 16.0, right: 16.0),
         child: FloatingActionButton(
           onPressed: () {
-            // Add functionality to create a new post
+            // log out
+            AuthService().signOut();
+
           },
           child: Icon(Icons.add),
           backgroundColor: Colors.blue,
-          shape: CircleBorder(), // Circular button shape
+          shape: CircleBorder(),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Align button to the end (right)
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
