@@ -38,6 +38,7 @@ dependencies:
   firebase_core: ^2.15.0
   firebase_auth: ^4.16.0
   animated_text_kit: ^4.2.2
+  widget_and_text_animator: ^1.1.5
 
 dev_dependencies:
   flutter_test:
