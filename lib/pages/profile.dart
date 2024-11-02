@@ -1,26 +1,76 @@
 import 'package:flutter/material.dart';
+import 'package:to_rent/services/firestore_service.dart';
 import 'package:to_rent/widgets/custom_app_bar.dart';
+import 'package:provider/provider.dart';
+import 'package:to_rent/services/auth_provider.dart';
 
-class ProfileFeed extends StatelessWidget {
+class ProfileFeed extends StatefulWidget {
   const ProfileFeed({Key? key}) : super(key: key);
 
   @override
+  _ProfileFeedState createState() => _ProfileFeedState();
+}
+
+class _ProfileFeedState extends State<ProfileFeed> {
+  late Future<Map<String, dynamic>> _userProfileData;
+  String? uid;
+  bool _isInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Ensure this code runs only once, like initState.
+    if (!_isInitialized) {
+      final user = Provider.of<AuthProvider>(context, listen: false).user;
+      final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
+      uid = currentRoute.startsWith('/profile/') ? currentRoute.split('/').last : user?.uid;
+
+      if (uid != null) {
+        _userProfileData = FirestoreService().getUserProfileData(uid!);
+      }
+
+      _isInitialized = true; // Set this to true so this block is not re-executed.
+    }
+  }
+  @override
   Widget build(BuildContext context) {
+    if (uid == null) {
+      return const Center(child: Text('User not found'));
+    }
     return Scaffold(
       appBar: CustomAppBar(title: 'الملف الشخصي'),
       drawer: CustomDrawer(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Profile Card
-              ProfileCard(initialRating: 4), // Example initial rating
-
-              // Posts Card
-              PostsCard(),
-            ],
-          ),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _userProfileData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data == null) {
+              return const Center(child: Text('No data found'));
+            } else {
+              final profileData = snapshot.data!;
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Profile Card
+                    ProfileCard(
+                      uid: profileData['uid'],
+                      username: profileData['username'],
+                      profilePicture: profileData['profilePicture'],
+                      initialRating: profileData['rating'],
+                    ),
+                    // Posts Card
+                    const PostsCard(),
+                  ],
+                ),
+              );
+            }
+          },
         ),
       ),
     );
@@ -28,9 +78,18 @@ class ProfileFeed extends StatelessWidget {
 }
 
 class ProfileCard extends StatefulWidget {
+  final String uid;
+  final String username;
+  final String profilePicture;
   final int initialRating;
 
-  const ProfileCard({Key? key, required this.initialRating}) : super(key: key);
+  const ProfileCard({
+    Key? key,
+    required this.uid,
+    required this.username,
+    required this.profilePicture,
+    required this.initialRating,
+  }) : super(key: key);
 
   @override
   _ProfileCardState createState() => _ProfileCardState();
@@ -38,24 +97,34 @@ class ProfileCard extends StatefulWidget {
 
 class _ProfileCardState extends State<ProfileCard> {
   late int _currentRating;
+  late bool isViewingSelf;
 
   @override
   void initState() {
     super.initState();
-    _currentRating = widget.initialRating; // Set initial rating from backend
+    _currentRating = widget.initialRating;
+
+    final currentUserUid =
+        Provider.of<AuthProvider>(context, listen: false).user?.uid;
+    isViewingSelf = currentUserUid == widget.uid;
   }
 
   Future<void> _updateRating(int newRating) async {
-    // Simulate sending the new rating to the backend
     await Future.delayed(Duration(seconds: 1));
-    print('Rating updated to backend: $newRating'); // Replace with actual API call
+    print('Rating updated to backend: $newRating');
   }
 
   void _onStarTapped(int rating) {
+    if (isViewingSelf || _currentRating == rating) return;
+
     setState(() {
-      _currentRating = rating; // Update rating visually
+      _currentRating = rating;
     });
-    _updateRating(rating); // Send new rating to backend
+    _updateRating(rating);
+  }
+
+  void _changeProfilePicture() {
+    print('Change profile picture');
   }
 
   @override
@@ -65,59 +134,105 @@ class _ProfileCardState extends State<ProfileCard> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
-          textDirection: TextDirection.rtl, // RTL layout
+          textDirection: TextDirection.rtl,
           children: [
             CircleAvatar(
               radius: 30,
               backgroundColor: Colors.grey[200],
-              child: const Icon(Icons.person, size: 40),
+              backgroundImage: widget.profilePicture.isNotEmpty
+                  ? NetworkImage(widget.profilePicture)
+                  : null,
+              child: widget.profilePicture.isEmpty
+                  ? const Icon(Icons.person, size: 40)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    'الاسم الشخصي',
-                    style: TextStyle(
+                  Text(
+                    widget.username,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                     textDirection: TextDirection.rtl,
                   ),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
-                    children: List.generate(
-                      5,
-                      (index) => GestureDetector(
-                        onTap: () => _onStarTapped(index + 1), // Set rating on tap
-                        child: Icon(
-                          Icons.star,
-                          color: index < _currentRating ? Colors.orange : Colors.grey,
-                          size: 25,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: List.generate(
+                          5,
+                          (index) => GestureDetector(
+                            onTap: () => _onStarTapped(index + 1),
+                            child: Icon(
+                              Icons.star,
+                              color: index < _currentRating
+                                  ? Colors.orange
+                                  : Colors.grey,
+                              size: 25,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      if (isViewingSelf)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            'تقييمك',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                // Add message functionality
-              },
-              icon: const Icon(Icons.message, size: 18),
-              label: const Text('تواصل'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+            if (isViewingSelf) ...[
+              const SizedBox(width: 16),
+              PopupMenuButton<String>(
+                onSelected: (String result) {
+                  if (result == 'change_picture') {
+                    _changeProfilePicture();
+                  }
+                },
+                itemBuilder: (BuildContext context) =>
+                    <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'change_picture',
+                    child: Text('تغيير صورة الملف الشخصي'),
+                  ),
+                ],
+                icon: const Icon(Icons.more_vert),
+                offset: const Offset(0, 40),
+              ),
+            ],
+            if (!isViewingSelf) ...[
+              const SizedBox(width: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Add message functionality
+                },
+                icon: const Icon(Icons.message, size: 18),
+                label: const Text('تواصل'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -125,11 +240,13 @@ class _ProfileCardState extends State<ProfileCard> {
   }
 }
 
+
 class PostsCard extends StatelessWidget {
   const PostsCard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    print('Building posts card');
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: Column(
@@ -152,11 +269,13 @@ class PostsCard extends StatelessWidget {
             children: const [
               PostCard(
                 imageUrl: 'assets/vase.jpg',
-                description: 'مزهرية سيراميك مصنوعة يدوياً، تضيف لمسة من الأناقة لأي غرفة.',
+                description:
+                    'مزهرية سيراميك مصنوعة يدوياً، تضيف لمسة من الأناقة لأي غرفة.',
               ),
               PostCard(
                 imageUrl: 'assets/handbag.jpg',
-                description: 'حقيبة يد جلدية أنيقة مع تفاصيل ذهبية، ملحق مثالي لأي مناسبة.',
+                description:
+                    'حقيبة يد جلدية أنيقة مع تفاصيل ذهبية، ملحق مثالي لأي مناسبة.',
               ),
             ],
           ),
