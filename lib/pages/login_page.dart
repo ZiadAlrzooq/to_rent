@@ -145,12 +145,11 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     SizedBox(height: 20),
                     CustomButton(
-                      text: 'إنشاء حساب',
+                      text: 'العودة',
                       onPressed: () {
-                        Navigator.pushNamed(context, '/register');
+                        Navigator.pop(context);
                       },
                       color: Colors.teal[600]!,
-                      isLoading: false,
                     ),
                   ],
                 ),
