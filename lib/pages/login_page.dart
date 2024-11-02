@@ -6,6 +6,15 @@ import '../widgets/input_field.dart';
 import '../services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:to_rent/services/auth_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
+/* invalid-email:
+Thrown if the email address is not valid.
+user-disabled:
+Thrown if the user corresponding to the given email has been disabled.
+user-not-found:
+Thrown if there is no user corresponding to the given email.
+wrong-password:
+Thrown if the password is invalid for the given email, or the account corresponding to the email does not have a password set. */
 
 class LoginPage extends StatefulWidget {
   @override
@@ -17,8 +26,17 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoggingIn = false;
-
+  bool isInvalidEmail = false;
+  bool isUserDisabled = false;
+  bool isUserNotFound = false;
+  bool isWrongPassword = false;
   void login() async {
+    setState(() {
+      isInvalidEmail = false;
+      isUserDisabled = false;
+      isUserNotFound = false;
+      isWrongPassword = false;
+    });
     if (_formKey.currentState!.validate()) {
       setState(() {
         isLoggingIn = true;
@@ -26,12 +44,33 @@ class _LoginPageState extends State<LoginPage> {
 
       final String email = emailController.text;
       final String password = passwordController.text;
-      await AuthService().signInWithEmailAndPassword(email, password);
+      try {
+        await AuthService().signInWithEmailAndPassword(email, password);
+      } catch (e) {
+        if (e is FirebaseAuthException) {
+          if (e.code == 'invalid-email') {
+            setState(() {
+              isInvalidEmail = true;
+            });
+          } else if (e.code == 'user-disabled') {
+            setState(() {
+              isUserDisabled = true;
+            });
+          } else if (e.code == 'user-not-found') {
+            setState(() {
+              isUserNotFound = true;
+            });
+          } else if (e.code == 'wrong-password') {
+            setState(() {
+              isWrongPassword = true;
+            });
+          }
+        }
+        _formKey.currentState!.validate(); // Trigger validation to show error
+      }
       setState(() {
         isLoggingIn = false;
       });
-
-      // Handle login action
     }
   }
 
@@ -70,9 +109,14 @@ class _LoginPageState extends State<LoginPage> {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء إدخال البريد الإلكتروني';
                         }
-                        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                        if (!emailRegex.hasMatch(value)) {
-                          return 'الرجاء إدخال بريد إلكتروني صالح';
+                        if (isInvalidEmail) {
+                          return 'البريد الإلكتروني غير صحيح';
+                        }
+                        if (isUserDisabled) {
+                          return 'المستخدم معطل';
+                        }
+                        if (isUserNotFound) {
+                          return 'المستخدم غير موجود';
                         }
                         return null;
                       },
@@ -84,6 +128,9 @@ class _LoginPageState extends State<LoginPage> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'الرجاء إدخال كلمة المرور';
+                        }
+                        if (isWrongPassword) {
+                          return 'كلمة المرور غير صحيحة';
                         }
                         return null;
                       },

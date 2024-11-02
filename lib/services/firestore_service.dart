@@ -11,4 +11,12 @@ class FirestoreService {
     batch.set(usernameRef, {'uid': uid});
     await batch.commit();
   }
+
+  // function to check if the username is already taken
+  Future<bool> isUsernameTaken(String username) async {
+    final usernameRef =
+        FirebaseFirestore.instance.collection('usernames').doc(username);
+    final doc = await usernameRef.get();
+    return doc.exists;
+  }
 }

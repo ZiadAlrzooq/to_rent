@@ -28,6 +28,7 @@ class InputField extends StatelessWidget {
         ),
         filled: true,
         fillColor: Colors.white.withOpacity(0.1),
+        errorMaxLines: 2,
       ),
       style: TextStyle(color: Colors.white),
       obscureText: obscureText,

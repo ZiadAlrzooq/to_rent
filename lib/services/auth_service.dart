@@ -8,20 +8,18 @@ class AuthService {
       User? user = result.user;
       return user;
     } catch (e) {
-      print(e.toString());
-      return null;
+      throw e;
     }
   }
 
-  Future<User?> registerWithEmailAndPassword(String username, String email, String password) async {
+  Future<User?> registerWithEmailAndPassword(String username, String email, String password) async{
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
       await FirestoreService().createUser(user!.uid, email, username);
       return user;
     } catch (e) {
-      print(e.toString());
-      return null;
+      throw e;
     }
   }
 

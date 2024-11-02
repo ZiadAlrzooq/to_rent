@@ -1,4 +1,4 @@
-// lib/pages/register_page.dart
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuthException;
 import 'package:flutter/material.dart';
 import '../widgets/background_widget.dart';
 import '../widgets/custom_button.dart';
@@ -6,6 +6,7 @@ import '../widgets/input_field.dart';
 import 'package:to_rent/services/auth_service.dart';
 import 'package:to_rent/services/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:to_rent/services/firestore_service.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -20,8 +21,17 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
   bool _isRegistering = false;
-
-  void register() {
+  bool _isUsernameTaken = false;
+  bool _isEmailTaken = false;
+  bool _isWeakPassword = false;
+  bool _isInvalidEmail = false;
+  void register() async {
+    setState(() {
+      _isUsernameTaken = false;
+      _isEmailTaken = false;
+      _isWeakPassword = false;
+      _isInvalidEmail = false;
+    });
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isRegistering = true;
@@ -29,7 +39,40 @@ class _RegisterPageState extends State<RegisterPage> {
       final String username = usernameController.text;
       final String email = emailController.text;
       final String password = passwordController.text;
-      AuthService().registerWithEmailAndPassword(username, email, password);
+      // Check if the username is taken
+      bool isTaken = await FirestoreService().isUsernameTaken(username);
+      setState(() {
+        _isUsernameTaken = isTaken;
+        _isRegistering = false;
+      });
+      if (_isUsernameTaken) {
+        _formKey.currentState!.validate(); // Trigger validation to show error
+        return;
+      }
+      try {
+        await AuthService().registerWithEmailAndPassword(username, email, password);
+      } catch (e) {
+        if (e is FirebaseAuthException) {
+          if (e.code == 'email-already-in-use') {
+            setState(() {
+              _isEmailTaken = true;
+            });
+          } else if (e.code == 'unknown') { // Firebase error code for weak password
+            setState(() {
+              _isWeakPassword = true;
+            });
+          } else if (e.code == 'invalid-email') {
+            setState(() {
+              _isInvalidEmail = true;
+            });
+          } else {
+            print('Error: ' + e.toString());
+          }
+        } else {
+          print('Error: ' + e.toString());
+        }
+        _formKey.currentState!.validate(); // Trigger validation to show error
+      }
       setState(() {
         _isRegistering = false;
       });
@@ -71,6 +114,9 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (value == null || value.isEmpty) {
                             return 'الرجاء إدخال اسم المستخدم';
                           }
+                          if (_isUsernameTaken) {
+                            return 'الاسم مستخدم من قبل. الرجاء اختيار اسم آخر';
+                          }
                           return null;
                         },
                       ),
@@ -82,6 +128,12 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (value == null || value.isEmpty) {
                             return 'الرجاء إدخال البريد الإلكتروني';
                           }
+                          if (_isEmailTaken) {
+                            return 'البريد الإلكتروني مستخدم من قبل';
+                          }
+                          if (_isInvalidEmail) {
+                            return 'الرجاء إدخال بريد إلكتروني صالح';
+                          }
                           return null;
                         },
                       ),
@@ -92,6 +144,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'الرجاء إدخال كلمة المرور';
+                          }
+                          if (_isWeakPassword) {
+                            return 'كلمة المرور ضعيفة. يجب أن تحتوي على 8 أحرف على الأقل، حرف كبير، حرف صغير، ورمز خاص';
                           }
                           return null;
                         },
