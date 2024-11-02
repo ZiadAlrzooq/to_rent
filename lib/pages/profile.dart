@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:to_rent/widgets/custom_app_bar.dart';
 
 class ProfileFeed extends StatelessWidget {
   const ProfileFeed({Key? key}) : super(key: key);
@@ -6,6 +7,8 @@ class ProfileFeed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CustomAppBar(title: 'الملف الشخصي'),
+      drawer: CustomDrawer(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

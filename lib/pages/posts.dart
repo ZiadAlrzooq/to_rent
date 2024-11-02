@@ -30,7 +30,8 @@ class Posts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(),
+      appBar: CustomAppBar(title: 'المنشورات'), 
+      drawer: CustomDrawer(),
       body: Column(
         children: [
           Padding(

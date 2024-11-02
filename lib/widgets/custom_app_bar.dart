@@ -1,24 +1,89 @@
-// custom_app_bar.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/auth_service.dart';
+import 'package:to_rent/services/auth_service.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final String title;
+
+  CustomAppBar({required this.title});
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text("ToRent"),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.logout),
-          onPressed: () {
-            AuthService().signOut();
-          },
-        ),
-      ],
+      title: Text(title),
+      leading: Builder(
+        builder: (BuildContext context) {
+          return IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          );
+        },
+      ),
     );
   }
 
   @override
   Size get preferredSize => Size.fromHeight(kToolbarHeight);
+}
+
+class CustomDrawer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
+
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          Container(
+            height: 100.0, // Adjust the height as needed
+            child: DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'القائمة',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.article),
+            title: Text('المنشورات'),
+            selected: currentRoute == '/posts',
+            onTap: () {
+              if (currentRoute != '/posts') {
+                Navigator.pushReplacementNamed(context, '/posts');
+              }
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.person),
+            title: Text('الملف الشخصي'),
+            selected: currentRoute == '/profile',
+            onTap: () {
+              if (currentRoute != '/profile') {
+                Navigator.pushReplacementNamed(context, '/profile');
+              }
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.logout),
+            title: Text('تسجيل خروج'),
+            onTap: () {
+              AuthService().signOut();
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }

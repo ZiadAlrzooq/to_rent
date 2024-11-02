@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'services/auth_provider.dart';
 import 'pages/posts.dart';
 import 'widgets/protected_route.dart';
+import 'pages/profile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ToRent App',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: 
+          Colors.blue,
+          brightness: Brightness.light,
+          )
       ),
       initialRoute: '/',
       routes: {
@@ -34,6 +39,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
         '/posts': (context) => ProtectedRoute(child: Posts()),
+        '/profile': (context) => ProtectedRoute(child: ProfileFeed()),
       },
     );
   }
