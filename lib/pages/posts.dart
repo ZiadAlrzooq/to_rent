@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:to_rent/pages/create_post.dart';
 import 'package:to_rent/services/auth_service.dart';
 import 'package:to_rent/widgets/custom_app_bar.dart';
+
 class Posts extends StatelessWidget {
   final List<Map<String, String>> posts = [
     {
@@ -30,7 +33,7 @@ class Posts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'المنشورات'), 
+      appBar: CustomAppBar(title: 'المنشورات'),
       drawer: CustomDrawer(),
       body: Column(
         children: [
@@ -150,7 +153,24 @@ class Posts extends StatelessWidget {
         child: FloatingActionButton(
           onPressed: () {
             // make it navigate to the new post page
-            Navigator.pushNamed(context, '/posts/new');
+            Navigator.pushNamed(context, '/create-post',
+                arguments: RentalPost(
+                    title: 'Sample Title', // Replace with actual title
+                    description:
+                        'Sample Description', // Replace with actual description
+                    imageUrls: [
+                      'https://picsum.photos/200/300',
+                      'https://picsum.photos/200/300'
+                    ], // Replace with actual image URLs
+                    rentPrice: 1000.0, // Replace with actual rent price
+                    rentType: 'شهر', // Replace with actual rent type
+                    posterId: 'user123', // Replace with actual poster ID
+                    createdDate:
+                        Timestamp(1234567890, 0), // Replace with actual date
+                    location: 'الرياض', // Replace with actual location
+                    phoneNumber:
+                        '123-456-7890' // Replace with actual phone number
+                    ));
           },
           child: Icon(Icons.add),
           backgroundColor: Colors.blue,

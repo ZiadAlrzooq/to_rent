@@ -10,6 +10,7 @@ import 'pages/posts.dart';
 import 'pages/post_details.dart'; // New import for the post detail page
 import 'widgets/protected_route.dart';
 import 'pages/profile.dart';
+import 'pages/create_post.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,9 +37,8 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       onGenerateRoute: (settings) {
-        // Handle named routes with parameters
         final uri = Uri.parse(settings.name!);
-        
+
         if (uri.pathSegments.length == 2 && uri.pathSegments.first == 'posts') {
           final postId = uri.pathSegments[1];
           return MaterialPageRoute(
@@ -47,8 +47,6 @@ class MyApp extends StatelessWidget {
             ),
           );
         }
-
-        // Handle static routes
         switch (settings.name) {
           case '/':
             return MaterialPageRoute(builder: (context) => HomePage());
@@ -63,6 +61,20 @@ class MyApp extends StatelessWidget {
           case '/profile':
             return MaterialPageRoute(
               builder: (context) => ProtectedRoute(child: ProfileFeed()),
+            );
+          case '/create-post':
+            return MaterialPageRoute(
+              builder: (context) {
+                final RentalPost? post = settings.arguments as RentalPost?;
+                return ProtectedRoute(
+                  child: RentalPostForm(
+                    post: post,
+                    onSubmit: (post) {
+                      // Handle the post submission
+                    },
+                  ),
+                );
+              },
             );
           default:
             return MaterialPageRoute(
