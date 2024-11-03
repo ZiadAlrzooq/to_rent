@@ -5,6 +5,8 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:timeago/timeago.dart' as timeago_ar;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // Image Gallery Screen
 class ImageGalleryScreen extends StatefulWidget {
@@ -107,6 +109,7 @@ class Post {
   final String unit;
   final DateTime timestamp;
   final String location;
+  final String phoneNumber;
   final List<Comment> comments;
 
   Post({
@@ -119,6 +122,7 @@ class Post {
     required this.unit,
     required this.timestamp,
     required this.location,
+    required this.phoneNumber,
     List<Comment>? comments,
   }) : comments = comments ?? [];
 
@@ -141,6 +145,7 @@ class Post {
       unit: json['unit'],
       timestamp: DateTime.parse(json['timestamp']),
       location: json['location'],
+      phoneNumber: json['phone_number'],
       comments: comments,
     );
   }
@@ -192,6 +197,7 @@ class _PostPageState extends State<PostPage> {
         'unit': 'لكل شهر',
         'timestamp': '2024-03-01T10:00:00Z',
         'location': 'الرياض',
+        'phone_number': '+966555555555',
         'comments': [
           {
             'id': '1',
@@ -441,6 +447,31 @@ class _PostPageState extends State<PostPage> {
                                         ),
                                       ),
                                     ],
+                                  ),
+                                ),
+                                SizedBox(height: 24),
+
+                                // Contact Button
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    String androidUrl =
+                                        "whatsapp://send?phone=${post!.phoneNumber}";
+                                    String iosUrl =
+                                        "https://wa.me/${post!.phoneNumber}";
+                                    Uri url = Uri.parse(androidUrl);
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(url);
+                                    } else {
+                                      throw 'Could not launch $url';
+                                    }
+                                  },
+                                  icon: FaIcon(FontAwesomeIcons.whatsapp),
+                                  label: Text('تواصل عبر الواتساب'),
+                                                                    style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                   ),
                                 ),
                                 SizedBox(height: 24),
