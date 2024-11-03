@@ -149,9 +149,8 @@ class Posts extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16.0, right: 16.0),
         child: FloatingActionButton(
           onPressed: () {
-            // log out
-            AuthService().signOut();
-
+            // make it navigate to the new post page
+            Navigator.pushNamed(context, '/posts/new');
           },
           child: Icon(Icons.add),
           backgroundColor: Colors.blue,
