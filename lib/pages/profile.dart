@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:to_rent/services/firestore_service.dart';
 import 'package:to_rent/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
@@ -24,15 +26,19 @@ class _ProfileFeedState extends State<ProfileFeed> {
     if (!_isInitialized) {
       final user = Provider.of<AuthProvider>(context, listen: false).user;
       final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
-      uid = currentRoute.startsWith('/profile/') ? currentRoute.split('/').last : user?.uid;
+      uid = currentRoute.startsWith('/profile/')
+          ? currentRoute.split('/').last
+          : user?.uid;
 
       if (uid != null) {
         _userProfileData = FirestoreService().getUserProfileData(uid!);
       }
 
-      _isInitialized = true; // Set this to true so this block is not re-executed.
+      _isInitialized =
+          true; // Set this to true so this block is not re-executed.
     }
   }
+
   @override
   Widget build(BuildContext context) {
     if (uid == null) {
@@ -123,8 +129,30 @@ class _ProfileCardState extends State<ProfileCard> {
     _updateRating(rating);
   }
 
-  void _changeProfilePicture() {
-    print('Change profile picture');
+  void _changeProfilePicture() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        aspectRatio: CropAspectRatio(
+            ratioX: 1, ratioY: 1),
+            uiSettings: [
+              AndroidUiSettings(
+                toolbarTitle: 'قص الصورة',
+                toolbarColor: Colors.deepOrange,
+                toolbarWidgetColor: Colors.white,
+                initAspectRatio: CropAspectRatioPreset.original,
+                lockAspectRatio: true
+              )
+            ]
+      );
+
+      if (croppedFile != null) {
+        print(croppedFile);
+      }
+    }
   }
 
   @override
@@ -204,8 +232,7 @@ class _ProfileCardState extends State<ProfileCard> {
                     _changeProfilePicture();
                   }
                 },
-                itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<String>>[
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                   const PopupMenuItem<String>(
                     value: 'change_picture',
                     child: Text('تغيير صورة الملف الشخصي'),
@@ -239,7 +266,6 @@ class _ProfileCardState extends State<ProfileCard> {
     );
   }
 }
-
 
 class PostsCard extends StatelessWidget {
   const PostsCard({Key? key}) : super(key: key);
