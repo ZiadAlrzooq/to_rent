@@ -297,7 +297,8 @@ class _RentalPostFormState extends State<RentalPostForm> {
                                     children: [
                                       Image.network(url, height: 100),
                                       Positioned(
-                                        right: 0,
+                                        right: -10,
+                                        top: -10,
                                         child: IconButton(
                                           icon: const Icon(Icons.close,
                                               color: Colors.red),
@@ -317,7 +318,8 @@ class _RentalPostFormState extends State<RentalPostForm> {
                                     children: [
                                       Image.file(file, height: 100),
                                       Positioned(
-                                        right: 0,
+                                        right: -10,
+                                        top: -10,
                                         child: IconButton(
                                           icon: const Icon(Icons.close,
                                               color: Colors.red),
