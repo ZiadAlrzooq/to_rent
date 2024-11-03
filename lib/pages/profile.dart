@@ -69,6 +69,7 @@ class _ProfileFeedState extends State<ProfileFeed> {
                       username: profileData['username'],
                       profilePicture: profileData['profilePicture'],
                       initialRating: profileData['rating'],
+                      ratingCount: profileData['ratingCount'],
                     ),
                     // Posts Card
                     const PostsCard(),
@@ -88,6 +89,7 @@ class ProfileCard extends StatefulWidget {
   final String username;
   final String profilePicture;
   final int initialRating;
+  final int ratingCount;
 
   const ProfileCard({
     Key? key,
@@ -95,6 +97,7 @@ class ProfileCard extends StatefulWidget {
     required this.username,
     required this.profilePicture,
     required this.initialRating,
+    required this.ratingCount,
   }) : super(key: key);
 
   @override
@@ -135,19 +138,16 @@ class _ProfileCardState extends State<ProfileCard> {
 
     if (pickedFile != null) {
       final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        aspectRatio: CropAspectRatio(
-            ratioX: 1, ratioY: 1),
-            uiSettings: [
-              AndroidUiSettings(
+          sourcePath: pickedFile.path,
+          aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
                 toolbarTitle: 'قص الصورة',
                 toolbarColor: Colors.deepOrange,
                 toolbarWidgetColor: Colors.white,
                 initAspectRatio: CropAspectRatioPreset.original,
-                lockAspectRatio: true
-              )
-            ]
-      );
+                lockAspectRatio: true)
+          ]);
 
       if (croppedFile != null) {
         print(croppedFile);
@@ -191,6 +191,17 @@ class _ProfileCardState extends State<ProfileCard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Text(
+                          '(${widget.ratingCount})',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textDirection: TextDirection.rtl,
+                        ),
+                      ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: List.generate(

@@ -46,10 +46,11 @@ class FirestoreService {
         .get();
     final ratings =
         ratingsQuery.docs.map((doc) => doc['rating'] as int).toList();
+    final ratingCount = ratings.length;
     // Calculate the average rating
     final averageRating = ratings.isEmpty
         ? 0
-        : (ratings.reduce((a, b) => a + b) / ratings.length).round();
+        : (ratings.reduce((a, b) => a + b) / ratingCount).round();
 
     // Combine the data into a single map
     final profileData = {
@@ -57,6 +58,7 @@ class FirestoreService {
       'username': username,
       'profilePicture': userDoc.data()?['profilePicture'] ?? '',
       'rating': averageRating,
+      'ratingCount': ratingCount,
     };
 
     return profileData;
