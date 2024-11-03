@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:timeago/timeago.dart' as timeago_ar;
 
 // Image Gallery Screen
 class ImageGalleryScreen extends StatefulWidget {
@@ -103,6 +105,8 @@ class Post {
   final List<String> images;
   final double price;
   final String unit;
+  final DateTime timestamp;
+  final String location;
   final List<Comment> comments;
 
   Post({
@@ -113,16 +117,18 @@ class Post {
     required this.images,
     required this.price,
     required this.unit,
-    List<Comment>? comments,  // Make comments parameter optional
-  }) : comments = comments ?? [];  // Initialize with empty list if null
+    required this.timestamp,
+    required this.location,
+    List<Comment>? comments,
+  }) : comments = comments ?? [];
 
   factory Post.fromJson(Map<String, dynamic> json) {
-    // Handle case where comments might be null in the JSON
     var commentsList = json['comments'] as List?;
     List<Comment> comments = [];
-    
+
     if (commentsList != null) {
-      comments = commentsList.map((comment) => Comment.fromJson(comment)).toList();
+      comments =
+          commentsList.map((comment) => Comment.fromJson(comment)).toList();
     }
 
     return Post(
@@ -133,11 +139,12 @@ class Post {
       images: List<String>.from(json['images']),
       price: json['price'].toDouble(),
       unit: json['unit'],
+      timestamp: DateTime.parse(json['timestamp']),
+      location: json['location'],
       comments: comments,
     );
   }
 }
-
 
 class PostPage extends StatefulWidget {
   final String postId;
@@ -183,6 +190,8 @@ class _PostPageState extends State<PostPage> {
         ],
         'price': 1500.0,
         'unit': 'لكل شهر',
+        'timestamp': '2024-03-01T10:00:00Z',
+        'location': 'الرياض',
         'comments': [
           {
             'id': '1',
@@ -268,6 +277,7 @@ class _PostPageState extends State<PostPage> {
 
   @override
   Widget build(BuildContext context) {
+    timeago_ar.setLocaleMessages('ar', timeago_ar.ArMessages());
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -318,7 +328,33 @@ class _PostPageState extends State<PostPage> {
                                   ),
                                 ),
                                 SizedBox(height: 12),
-
+                                Row(
+                                  children: [
+                                    Icon(Icons.location_on,
+                                        color: Colors.grey, size: 16),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      post!.location,
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    SizedBox(width: 16),
+                                    Icon(Icons.access_time,
+                                        color: Colors.grey, size: 16),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      timeago.format(post!.timestamp,
+                                          locale: 'ar'),
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 16),
                                 // Images
                                 if (post!.images.isNotEmpty)
                                   Container(
@@ -418,40 +454,58 @@ class _PostPageState extends State<PostPage> {
                                     ),
                                   ),
                                   SizedBox(height: 16),
-                                  ...post!.comments.map((comment) => Padding(
-                                    padding: EdgeInsets.only(bottom: 12),
-                                    child: Container(
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[100],
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              CircleAvatar(
-                                                radius: 16,
-                                                backgroundImage: CachedNetworkImageProvider(
-                                                  comment.profilePicture,
-                                                ),
+                                  ...post!.comments
+                                      .map((comment) => Padding(
+                                            padding:
+                                                EdgeInsets.only(bottom: 12),
+                                            child: Container(
+                                              padding: EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey[100],
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                comment.username,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      CircleAvatar(
+                                                        radius: 16,
+                                                        backgroundImage:
+                                                            CachedNetworkImageProvider(
+                                                          comment
+                                                              .profilePicture,
+                                                        ),
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text(
+                                                        comment.username,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Spacer(),
+                                                      Text(
+                                                        timeago.format(
+                                                            comment.timestamp,
+                                                            locale: 'ar'),
+                                                        style: TextStyle(
+                                                          color: Colors.grey,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  SizedBox(height: 8),
+                                                  Text(comment.content),
+                                                ],
                                               ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 8),
-                                          Text(comment.content),
-                                        ],
-                                      ),
-                                    ),
-                                  )).toList(),
+                                            ),
+                                          ))
+                                      .toList(),
                                 ],
                               ],
                             ),
