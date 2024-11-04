@@ -1,10 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:timeago/timeago.dart' as timeago_ar;
+import 'package:to_rent/services/firestore_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -86,16 +89,6 @@ class Comment {
     required this.content,
     required this.timestamp,
   });
-
-  factory Comment.fromJson(Map<String, dynamic> json) {
-    return Comment(
-      id: json['id'],
-      username: json['username'],
-      profilePicture: json['profile_picture'],
-      content: json['content'],
-      timestamp: DateTime.parse(json['timestamp']),
-    );
-  }
 }
 
 // Update Post Model to include comments
@@ -125,30 +118,6 @@ class Post {
     required this.phoneNumber,
     List<Comment>? comments,
   }) : comments = comments ?? [];
-
-  factory Post.fromJson(Map<String, dynamic> json) {
-    var commentsList = json['comments'] as List?;
-    List<Comment> comments = [];
-
-    if (commentsList != null) {
-      comments =
-          commentsList.map((comment) => Comment.fromJson(comment)).toList();
-    }
-
-    return Post(
-      username: json['username'],
-      profilePicture: json['profile_picture'],
-      title: json['title'],
-      description: json['description'],
-      images: List<String>.from(json['images']),
-      price: json['price'].toDouble(),
-      unit: json['unit'],
-      timestamp: DateTime.parse(json['timestamp']),
-      location: json['location'],
-      phoneNumber: json['phone_number'],
-      comments: comments,
-    );
-  }
 }
 
 class PostPage extends StatefulWidget {
@@ -181,43 +150,127 @@ class _PostPageState extends State<PostPage> {
 
   Future<void> fetchPost() async {
     try {
-      // Simulate API call
-      await Future.delayed(Duration(seconds: 2));
-      // Replace this with actual API call using widget.postId
-      final response = {
-        'username': 'أحمد محمد',
-        'profile_picture': 'https://picsum.photos/seed/1/200/300',
-        'title': 'شقة للإيجار',
-        'description': 'شقة جميلة في حي راقي',
-        'images': [
-          'https://picsum.photos/seed/2/200/300',
-          'https://picsum.photos/seed/3/200/300',
-        ],
-        'price': 1500.0,
-        'unit': 'لكل شهر',
-        'timestamp': '2024-03-01T10:00:00Z',
-        'location': 'الرياض',
-        'phone_number': '+966555555555',
-        'comments': [
-          {
-            'id': '1',
-            'username': 'محمد علي',
-            'profile_picture': 'https://picsum.photos/seed/4/200/300',
-            'content': 'هل العقار متوفر؟',
-            'timestamp': '2024-03-01T12:00:00Z',
-          },
-          {
-            'id': '2',
-            'username': 'سارة أحمد',
-            'profile_picture': 'https://picsum.photos/seed/5/200/300',
-            'content': 'موقع ممتاز',
-            'timestamp': '2024-03-01T13:30:00Z',
-          },
-        ],
-      };
+      // Fetch post data from Firestore using widget.postId
+      DocumentSnapshot postDoc = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(widget.postId)
+          .get();
+
+      if (!postDoc.exists) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('المنشور غير موجود')),
+        );
+        return;
+      }
+
+      Map<String, dynamic> postData = postDoc.data() as Map<String, dynamic>;
+
+      // Get posterId from post data
+      String posterId = postData['posterId'];
+
+      // Get username from usernames collection
+      QuerySnapshot usernameSnapshot = await FirebaseFirestore.instance
+          .collection('usernames')
+          .where('uid', isEqualTo: posterId)
+          .limit(1)
+          .get();
+
+      String username = 'Unknown';
+      if (usernameSnapshot.docs.isNotEmpty) {
+        username = usernameSnapshot.docs.first.id;
+      }
+
+      // Get profile picture from users collection using posterId
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(posterId)
+          .get();
+
+      String profilePicture = '';
+      if (userDoc.exists) {
+        final data = userDoc.data() as Map<String, dynamic>?;
+        profilePicture = data?['profilePicture'] as String? ?? '';
+      }
+
+      // Get comments subcollection from post document
+      QuerySnapshot commentsSnapshot = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(widget.postId)
+          .collection('comments')
+          .get();
+
+      List<Comment> comments = [];
+
+      for (var commentDoc in commentsSnapshot.docs) {
+        Map<String, dynamic> commentData =
+            commentDoc.data() as Map<String, dynamic>;
+
+        String commenterId = commentData['uid'];
+        String commenterUsername = 'Anonymous';
+        String commenterProfilePicture = '';
+
+        // Get commenter's username
+        QuerySnapshot commenterUsernameSnapshot = await FirebaseFirestore
+            .instance
+            .collection('usernames')
+            .where('uid', isEqualTo: commenterId)
+            .limit(1)
+            .get();
+
+        if (commenterUsernameSnapshot.docs.isNotEmpty) {
+          commenterUsername = commenterUsernameSnapshot.docs.first.id;
+        }
+
+        // Get commenter's profile picture
+        DocumentSnapshot commenterUserDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(commenterId)
+            .get();
+
+        if (commenterUserDoc.exists) {
+          final data = commenterUserDoc.data() as Map<String, dynamic>?;
+          commenterProfilePicture = data?['profilePicture'] as String? ?? '';
+        }
+
+        // Parse timestamp
+        DateTime timestamp;
+        if (commentData['timestamp'] is Timestamp) {
+          timestamp = (commentData['timestamp'] as Timestamp).toDate();
+        } else if (commentData['timestamp'] is String) {
+          timestamp = DateTime.parse(commentData['timestamp']);
+        } else {
+          timestamp = DateTime.now();
+        }
+
+        comments.add(Comment(
+          id: commentDoc.id,
+          username: commenterUsername,
+          profilePicture: commenterProfilePicture,
+          content: commentData['content'] ?? '',
+          timestamp: timestamp,
+        ));
+      }
+
+      // Create Post object
+      Post fetchedPost = Post(
+        username: username,
+        profilePicture: profilePicture,
+        title: postData['title'] ?? '',
+        description: postData['description'] ?? '',
+        images: List<String>.from(postData['imageUrls'] ?? []),
+        price: (postData['rentPrice'] ?? 0).toDouble(),
+        unit: postData['rentType'] ?? '',
+        timestamp: (postData['createdDate'] as Timestamp).toDate(),
+        location: postData['location'] ?? '',
+        phoneNumber: postData['phoneNumber'] ?? '',
+        comments: comments,
+      );
 
       setState(() {
-        post = Post.fromJson(response);
+        post = fetchedPost;
         isLoading = false;
       });
     } catch (e) {
@@ -227,6 +280,7 @@ class _PostPageState extends State<PostPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('حدث خطأ في تحميل المنشور')),
       );
+      print('Error fetching post: $e');
     }
   }
 
@@ -246,10 +300,16 @@ class _PostPageState extends State<PostPage> {
     ScaffoldMessenger.of(context).showSnackBar(loadingSnackBar);
 
     try {
-      // Simulate API call
-      await Future.delayed(Duration(seconds: 1));
-      // Replace with actual API call
-
+      // send comment to Firestore using uid, content, timestamp
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(widget.postId)
+          .collection('comments')
+          .add({
+        'uid': FirebaseAuth.instance.currentUser!.uid,
+        'content': _commentController.text,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
       // Clear input and show success message
       _commentController.clear();
       _commentFocusNode.unfocus();
@@ -467,7 +527,7 @@ class _PostPageState extends State<PostPage> {
                                   },
                                   icon: FaIcon(FontAwesomeIcons.whatsapp),
                                   label: Text('تواصل عبر الواتساب'),
-                                                                    style: ElevatedButton.styleFrom(
+                                  style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.green,
                                     foregroundColor: Colors.white,
                                     padding: EdgeInsets.symmetric(
