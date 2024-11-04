@@ -3,6 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class RentalPost {
   final String? id;
@@ -132,11 +134,33 @@ class _RentalPostFormState extends State<RentalPostForm> {
 
   Future<List<String>> _uploadImages() async {
     List<String> uploadedUrls = [];
+     Uri url = Uri.parse('https://api.cloudinary.com/v1_1/dxz9qstgg/image/upload');
 
-    for (File imageFile in _imageFiles) {
-      // upload the images and get the download URLs
+  for (File file in _imageFiles) {
+    final request = http.MultipartRequest('POST', url)
+      ..fields['upload_preset'] = 'tf66mt21'
+      ..files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          file.path,
+        ),
+      );
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.toBytes();
+      final responseString = String.fromCharCodes(responseData);
+      final jsonMap = jsonDecode(responseString);
+      print(jsonMap);
+      uploadedUrls.add(jsonMap['url']);
+    } else {
+      // Read the response body to get more error details
+      final errorData = await response.stream.bytesToString();
+      print('Failed to upload image: ${response.statusCode}');
+      print('Response body: $errorData');
     }
-
+  }  
     return uploadedUrls;
   }
 
@@ -155,20 +179,33 @@ class _RentalPostFormState extends State<RentalPostForm> {
       final List<String> newImageUrls = await _uploadImages();
       final allImageUrls = [..._existingImageUrls, ...newImageUrls];
 
-      final post = RentalPost(
-        id: widget.post?.id,
-        title: _titleController.text,
-        description: _descriptionController.text,
-        imageUrls: allImageUrls,
-        rentPrice: double.parse(_rentPriceController.text),
-        rentType: _selectedRentType,
-        posterId: FirebaseAuth.instance.currentUser!.uid,
-        createdDate: Timestamp.now(),
-        location: _selectedLocation,
-        phoneNumber: _phoneNumberController.text,
-      );
-
-      widget.onSubmit(post);
+      if (widget.post != null) {
+        await FirebaseFirestore.instance
+            .collection('posts')
+            .doc(widget.post?.id)
+            .update({
+          'title': _titleController.text,
+          'description': _descriptionController.text,
+          'rentPrice': double.parse(_rentPriceController.text),
+          'rentType': _selectedRentType,
+          'location': _selectedLocation,
+          'imageUrls': allImageUrls,
+          'phoneNumber': _phoneNumberController.text,
+        });
+      } else {
+        final postRef = FirebaseFirestore.instance.collection('posts').doc();
+        await postRef.set({
+          'posterId': FirebaseAuth.instance.currentUser!.uid,
+          'title': _titleController.text,
+          'description': _descriptionController.text,
+          'rentPrice': double.parse(_rentPriceController.text),
+          'rentType': _selectedRentType,
+          'location': _selectedLocation,
+          'imageUrls': allImageUrls,
+          'phoneNumber': _phoneNumberController.text,
+          'createdDate': FieldValue.serverTimestamp(),
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('حدث خطأ: $e')),

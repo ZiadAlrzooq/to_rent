@@ -153,24 +153,7 @@ class Posts extends StatelessWidget {
         child: FloatingActionButton(
           onPressed: () {
             // make it navigate to the new post page
-            Navigator.pushNamed(context, '/create-post',
-                arguments: RentalPost(
-                    title: 'Sample Title', // Replace with actual title
-                    description:
-                        'Sample Description', // Replace with actual description
-                    imageUrls: [
-                      'https://picsum.photos/200/300',
-                      'https://picsum.photos/200/300'
-                    ], // Replace with actual image URLs
-                    rentPrice: 1000.0, // Replace with actual rent price
-                    rentType: 'شهر', // Replace with actual rent type
-                    posterId: 'user123', // Replace with actual poster ID
-                    createdDate:
-                        Timestamp(1234567890, 0), // Replace with actual date
-                    location: 'الرياض', // Replace with actual location
-                    phoneNumber:
-                        '123-456-7890' // Replace with actual phone number
-                    ));
+            Navigator.pushNamed(context, '/create-post');
           },
           child: Icon(Icons.add),
           backgroundColor: Colors.blue,
