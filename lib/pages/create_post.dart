@@ -155,7 +155,6 @@ class _RentalPostFormState extends State<RentalPostForm> {
       print(jsonMap);
       uploadedUrls.add(jsonMap['url']);
     } else {
-      // Read the response body to get more error details
       final errorData = await response.stream.bytesToString();
       print('Failed to upload image: ${response.statusCode}');
       print('Response body: $errorData');
