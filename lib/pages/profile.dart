@@ -5,6 +5,8 @@ import 'package:to_rent/services/firestore_service.dart';
 import 'package:to_rent/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:to_rent/services/auth_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ProfileFeed extends StatefulWidget {
   const ProfileFeed({Key? key}) : super(key: key);
@@ -107,7 +109,7 @@ class ProfileCard extends StatefulWidget {
 class _ProfileCardState extends State<ProfileCard> {
   late int _currentRating;
   late bool isViewingSelf;
-
+  late String profilePicture;
   @override
   void initState() {
     super.initState();
@@ -116,6 +118,7 @@ class _ProfileCardState extends State<ProfileCard> {
     final currentUserUid =
         Provider.of<AuthProvider>(context, listen: false).user?.uid;
     isViewingSelf = currentUserUid == widget.uid;
+    profilePicture = widget.profilePicture;
   }
 
   Future<void> _updateRating(int newRating) async {
@@ -139,6 +142,8 @@ class _ProfileCardState extends State<ProfileCard> {
     if (pickedFile != null) {
       final croppedFile = await ImageCropper().cropImage(
           sourcePath: pickedFile.path,
+          maxHeight: 120,
+          maxWidth: 120,
           aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
           uiSettings: [
             AndroidUiSettings(
@@ -150,7 +155,30 @@ class _ProfileCardState extends State<ProfileCard> {
           ]);
 
       if (croppedFile != null) {
-        print(croppedFile);
+        Uri url =
+            Uri.parse('https://api.cloudinary.com/v1_1/dxz9qstgg/image/upload');
+        final request = http.MultipartRequest('POST', url)
+          ..fields['upload_preset'] = 'tf66mt21'
+          ..files
+              .add(await http.MultipartFile.fromPath('file', croppedFile.path));
+        final response = await request.send();
+        if (response.statusCode == 200) {
+          final responseData = await response.stream.toBytes();
+          final responseString = String.fromCharCodes(responseData);
+          final jsonMap = jsonDecode(responseString);
+          final newProfilePicture = jsonMap['url'];
+          // upload new profile picture to Firestore
+          try {
+            await FirestoreService()
+                .updateProfilePicture(widget.uid, newProfilePicture);
+            setState(() {
+              profilePicture = newProfilePicture;
+            });
+          } catch (e) {
+            // show error message
+            print('Error updating profile picture: $e');
+          }
+        }
       }
     }
   }
@@ -167,10 +195,10 @@ class _ProfileCardState extends State<ProfileCard> {
             CircleAvatar(
               radius: 30,
               backgroundColor: Colors.grey[200],
-              backgroundImage: widget.profilePicture.isNotEmpty
-                  ? NetworkImage(widget.profilePicture)
+              backgroundImage: profilePicture.isNotEmpty
+                  ? NetworkImage(profilePicture)
                   : null,
-              child: widget.profilePicture.isEmpty
+              child: profilePicture.isEmpty
                   ? const Icon(Icons.person, size: 40)
                   : null,
             ),

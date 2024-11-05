@@ -63,4 +63,10 @@ class FirestoreService {
 
     return profileData;
   }
+
+  // update pfp
+  Future<void> updateProfilePicture(String uid, String profilePicture) async {
+    final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+    await userRef.update({'profilePicture': profilePicture});
+  }
 }
