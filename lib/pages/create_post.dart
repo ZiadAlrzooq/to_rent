@@ -177,7 +177,7 @@ class _RentalPostFormState extends State<RentalPostForm> {
     try {
       final List<String> newImageUrls = await _uploadImages();
       final allImageUrls = [..._existingImageUrls, ...newImageUrls];
-
+      String postId = '';
       if (widget.post != null) {
         await FirebaseFirestore.instance
             .collection('posts')
@@ -191,6 +191,10 @@ class _RentalPostFormState extends State<RentalPostForm> {
           'imageUrls': allImageUrls,
           'phoneNumber': _phoneNumberController.text,
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم تحديث الإعلان')),
+        );
+        postId = widget.post!.id!;
       } else {
         final postRef = FirebaseFirestore.instance.collection('posts').doc();
         await postRef.set({
@@ -204,7 +208,12 @@ class _RentalPostFormState extends State<RentalPostForm> {
           'phoneNumber': _phoneNumberController.text,
           'createdDate': FieldValue.serverTimestamp(),
         });
+        postId = postRef.id;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم نشر الإعلان')),
+        );
       }
+      Navigator.of(context).pushNamed('/posts/$postId');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('حدث خطأ: $e')),
