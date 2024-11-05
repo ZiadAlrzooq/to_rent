@@ -344,25 +344,25 @@ class _PostPageState extends State<PostPage> {
   }
 
   void _navigateToEdit() {
-  final rentalPost = RentalPost(
-    id: widget.postId,
-    title: post!.title,
-    description: post!.description,
-    imageUrls: post!.images,
-    rentPrice: post!.price,
-    rentType: post!.unit,
-    createdDate: Timestamp.fromDate(post!.timestamp),
-    location: post!.location,
-    phoneNumber: post!.phoneNumber,
-    posterId: FirebaseAuth.instance.currentUser?.uid ?? '',
-  );
+    final rentalPost = RentalPost(
+      id: widget.postId,
+      title: post!.title,
+      description: post!.description,
+      imageUrls: post!.images,
+      rentPrice: post!.price,
+      rentType: post!.unit,
+      createdDate: Timestamp.fromDate(post!.timestamp),
+      location: post!.location,
+      phoneNumber: post!.phoneNumber,
+      posterId: FirebaseAuth.instance.currentUser?.uid ?? '',
+    );
 
-  Navigator.pushNamed(
-    context,
-    '/create-post',
-    arguments: rentalPost,
-  );
-}
+    Navigator.pushNamed(
+      context,
+      '/create-post',
+      arguments: rentalPost,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -373,13 +373,20 @@ class _PostPageState extends State<PostPage> {
         appBar: AppBar(
           title: Text('المنشور'),
           centerTitle: true,
-            actions: [
-    if (FirebaseAuth.instance.currentUser?.uid == posterId) // Only show for post owner
-      IconButton(
-        icon: Icon(Icons.edit),
-        onPressed: _navigateToEdit,
-      ),
-  ],
+          actions: [
+            if (FirebaseAuth.instance.currentUser?.uid ==
+                posterId) // Only show for post owner
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: _navigateToEdit,
+              ),
+          ],
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pushNamed('/posts');
+            },
+          ),
         ),
         body: isLoading
             ? Center(child: CircularProgressIndicator())
