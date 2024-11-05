@@ -7,6 +7,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:timeago/timeago.dart' as timeago_ar;
+import 'package:to_rent/pages/create_post.dart' show RentalPost;
 import 'package:to_rent/services/firestore_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -134,6 +135,7 @@ class _PostPageState extends State<PostPage> {
   bool isLoading = true;
   final TextEditingController _commentController = TextEditingController();
   final FocusNode _commentFocusNode = FocusNode();
+  String? posterId;
 
   @override
   void dispose() {
@@ -169,7 +171,7 @@ class _PostPageState extends State<PostPage> {
       Map<String, dynamic> postData = postDoc.data() as Map<String, dynamic>;
 
       // Get posterId from post data
-      String posterId = postData['posterId'];
+      posterId = postData['posterId'];
 
       // Get username from usernames collection
       QuerySnapshot usernameSnapshot = await FirebaseFirestore.instance
@@ -341,6 +343,27 @@ class _PostPageState extends State<PostPage> {
     );
   }
 
+  void _navigateToEdit() {
+  final rentalPost = RentalPost(
+    id: widget.postId,
+    title: post!.title,
+    description: post!.description,
+    imageUrls: post!.images,
+    rentPrice: post!.price,
+    rentType: post!.unit,
+    createdDate: Timestamp.fromDate(post!.timestamp),
+    location: post!.location,
+    phoneNumber: post!.phoneNumber,
+    posterId: FirebaseAuth.instance.currentUser?.uid ?? '',
+  );
+
+  Navigator.pushNamed(
+    context,
+    '/create-post',
+    arguments: rentalPost,
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     timeago_ar.setLocaleMessages('ar', timeago_ar.ArMessages());
@@ -350,6 +373,13 @@ class _PostPageState extends State<PostPage> {
         appBar: AppBar(
           title: Text('المنشور'),
           centerTitle: true,
+            actions: [
+    if (FirebaseAuth.instance.currentUser?.uid == posterId) // Only show for post owner
+      IconButton(
+        icon: Icon(Icons.edit),
+        onPressed: _navigateToEdit,
+      ),
+  ],
         ),
         body: isLoading
             ? Center(child: CircularProgressIndicator())
@@ -545,7 +575,9 @@ class _PostPageState extends State<PostPage> {
                                     ),
                                   ),
                                   SizedBox(height: 16),
-                                  ...post!.comments
+                                  ...(post!.comments.toList()
+                                        ..sort((a, b) =>
+                                            a.timestamp.compareTo(b.timestamp)))
                                       .map((comment) => Padding(
                                             padding:
                                                 EdgeInsets.only(bottom: 12),
