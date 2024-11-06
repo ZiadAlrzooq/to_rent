@@ -9,7 +9,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ProfileFeed extends StatefulWidget {
-  const ProfileFeed({Key? key}) : super(key: key);
+  final String? uid;
+  const ProfileFeed({Key? key, this.uid}) : super(key: key);
 
   @override
   _ProfileFeedState createState() => _ProfileFeedState();
@@ -17,35 +18,26 @@ class ProfileFeed extends StatefulWidget {
 
 class _ProfileFeedState extends State<ProfileFeed> {
   late Future<Map<String, dynamic>> _userProfileData;
-  String? uid;
   bool _isInitialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Ensure this code runs only once, like initState.
     if (!_isInitialized) {
       final user = Provider.of<AuthProvider>(context, listen: false).user;
-      final currentRoute = ModalRoute.of(context)?.settings.name ?? '';
-      uid = currentRoute.startsWith('/profile/')
-          ? currentRoute.split('/').last
-          : user?.uid;
+      final userId = widget.uid ?? user?.uid;
 
-      if (uid != null) {
-        _userProfileData = FirestoreService().getUserProfileData(uid!);
+      if (userId != null) {
+        _userProfileData = FirestoreService().getUserProfileData(userId);
       }
 
-      _isInitialized =
-          true; // Set this to true so this block is not re-executed.
+      _isInitialized = true;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (uid == null) {
-      return const Center(child: Text('User not found'));
-    }
     return Scaffold(
       appBar: CustomAppBar(title: 'الملف الشخصي'),
       drawer: CustomDrawer(),
@@ -122,6 +114,9 @@ class _ProfileCardState extends State<ProfileCard> {
   }
 
   Future<void> _updateRating(int newRating) async {
+    // TODO: Update rating to backend
+    // TODO: also update ratingCount
+    // TODO: show recent posts
     await Future.delayed(Duration(seconds: 1));
     print('Rating updated to backend: $newRating');
   }

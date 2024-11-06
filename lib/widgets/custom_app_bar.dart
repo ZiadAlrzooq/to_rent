@@ -10,6 +10,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(title),
+      centerTitle: true,
       leading: Builder(
         builder: (BuildContext context) {
           return IconButton(
@@ -71,6 +72,16 @@ class CustomDrawer extends StatelessWidget {
             onTap: () {
               if (currentRoute != '/profile') {
                 Navigator.pushReplacementNamed(context, '/profile');
+              }
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.chat),
+            title: Text('الدردشات'),
+            selected: currentRoute == '/chats',
+            onTap: () {
+              if (currentRoute != '/chats') {
+                Navigator.pushReplacementNamed(context, '/chats');
               }
             },
           ),

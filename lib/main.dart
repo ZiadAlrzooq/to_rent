@@ -11,6 +11,8 @@ import 'pages/post_details.dart'; // New import for the post detail page
 import 'widgets/protected_route.dart';
 import 'pages/profile.dart';
 import 'pages/create_post.dart';
+import 'pages/chat_page.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +49,16 @@ class MyApp extends StatelessWidget {
             ),
           );
         }
+        // Handle /profile/{id}
+        if (uri.pathSegments.length == 2 &&
+            uri.pathSegments.first == 'profile') {
+          final userId = uri.pathSegments[1];
+          return MaterialPageRoute(
+            builder: (context) => ProtectedRoute(
+              child: ProfileFeed(uid: userId),
+            ),
+          );
+        }
         switch (settings.name) {
           case '/':
             return MaterialPageRoute(builder: (context) => HomePage());
@@ -73,6 +85,15 @@ class MyApp extends StatelessWidget {
                       // Handle the post submission
                     },
                   ),
+                );
+              },
+            );
+          case '/chats':
+            return MaterialPageRoute(
+              builder: (context) {
+                final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+                return ProtectedRoute(
+                  child: ChatsPage(currentUserId: currentUserId),
                 );
               },
             );

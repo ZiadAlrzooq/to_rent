@@ -78,6 +78,7 @@ class _ImageGalleryScreenState extends State<ImageGalleryScreen> {
 // Add Comment Model
 class Comment {
   final String id;
+  final String commenterId;
   final String username;
   final String profilePicture;
   final String content;
@@ -85,6 +86,7 @@ class Comment {
 
   Comment({
     required this.id,
+    required this.commenterId,
     required this.username,
     required this.profilePicture,
     required this.content,
@@ -249,6 +251,7 @@ class _PostPageState extends State<PostPage> {
 
         comments.add(Comment(
           id: commentDoc.id,
+          commenterId: commenterId,
           username: commenterUsername,
           profilePicture: commenterProfilePicture,
           content: commentData['content'] ?? '',
@@ -402,23 +405,29 @@ class _PostPageState extends State<PostPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // User info section
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundImage:
-                                          CachedNetworkImageProvider(
-                                              post!.profilePicture),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Text(
-                                      post!.username,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.of(context)
+                                        .pushNamed('/profile/${posterId}');
+                                  },
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 24,
+                                        backgroundImage:
+                                            CachedNetworkImageProvider(
+                                                post!.profilePicture),
                                       ),
-                                    ),
-                                  ],
+                                      SizedBox(width: 12),
+                                      Text(
+                                        post!.username,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 SizedBox(height: 16),
 
@@ -601,20 +610,34 @@ class _PostPageState extends State<PostPage> {
                                                 children: [
                                                   Row(
                                                     children: [
-                                                      CircleAvatar(
-                                                        radius: 16,
-                                                        backgroundImage:
-                                                            CachedNetworkImageProvider(
-                                                          comment
-                                                              .profilePicture,
-                                                        ),
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text(
-                                                        comment.username,
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
+                                                      InkWell(
+                                                        onTap: () {
+                                                          print(comment
+                                                              .commenterId);
+                                                          Navigator.of(context)
+                                                              .pushNamed(
+                                                                  '/profile/${comment.commenterId}');
+                                                        },
+                                                        child: Row(
+                                                          children: [
+                                                            CircleAvatar(
+                                                              radius: 16,
+                                                              backgroundImage:
+                                                                  CachedNetworkImageProvider(
+                                                                comment
+                                                                    .profilePicture,
+                                                              ),
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text(
+                                                              comment.username,
+                                                              style: TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
                                                       Spacer(),
