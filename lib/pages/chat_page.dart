@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:to_rent/pages/chat_details.dart';
 import 'package:to_rent/widgets/custom_app_bar.dart';
+
 class ChatsPage extends StatelessWidget {
   final String currentUserId;
 
@@ -10,8 +11,9 @@ class ChatsPage extends StatelessWidget {
 
   Future<Map<String, dynamic>> getUserInfo(String userId) async {
     // Fetch profile picture from users collection
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    final pfp = userDoc['pfp'] ?? '';
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final pfp = userDoc['profilePicture'] ?? '';
 
     // Fetch username from usernames collection
     final usernameDoc = await FirebaseFirestore.instance
@@ -19,7 +21,8 @@ class ChatsPage extends StatelessWidget {
         .where('uid', isEqualTo: userId)
         .limit(1)
         .get();
-    final username = usernameDoc.docs.isNotEmpty ? usernameDoc.docs[0].id : 'Unknown';
+    final username =
+        usernameDoc.docs.isNotEmpty ? usernameDoc.docs[0].id : 'Unknown';
 
     return {'username': username, 'pfp': pfp};
   }
@@ -48,8 +51,9 @@ class ChatsPage extends StatelessWidget {
               final chatId = chat.id;
               final participants = List<String>.from(chat['participants']);
               final lastMessage = chat['lastMessage'] ?? '';
-              final otherUserId = participants.firstWhere((id) => id != currentUserId);
-
+              final otherUserId =
+                  participants.firstWhere((id) => id != currentUserId);
+                print('otherUserId: $otherUserId');
               // Use FutureBuilder to fetch user info for each chat item
               return FutureBuilder<Map<String, dynamic>>(
                 future: getUserInfo(otherUserId),
@@ -68,9 +72,11 @@ class ChatsPage extends StatelessWidget {
                       leading: CircleAvatar(
                         backgroundImage: pfpUrl.isNotEmpty
                             ? NetworkImage(pfpUrl)
-                            : AssetImage('assets/default_pfp.png') as ImageProvider,
+                            : AssetImage('assets/default_pfp.png')
+                                as ImageProvider,
                       ),
-                      title: Text(username, style: TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(username,
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(
                         lastMessage,
                         maxLines: 1,

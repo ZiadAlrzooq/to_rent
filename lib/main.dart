@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:to_rent/firebase_options.dart';
+import 'package:to_rent/pages/chat_details.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
@@ -56,6 +57,19 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(
             builder: (context) => ProtectedRoute(
               child: ProfileFeed(uid: userId),
+            ),
+          );
+        }
+        // Habdle /chats/{id}
+        if (uri.pathSegments.length == 2 && uri.pathSegments.first == 'chats') {
+          final chatId = uri.pathSegments[1];
+          return MaterialPageRoute(
+            builder: (context) => ProtectedRoute(
+              child: ChatScreen(
+                currentUserId: '',
+                otherUserId: '',
+                chatId: chatId,
+              ),
             ),
           );
         }

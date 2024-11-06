@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:to_rent/services/auth_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:to_rent/services/chat_service.dart';
 
 class ProfileFeed extends StatefulWidget {
   final String? uid;
@@ -280,7 +281,16 @@ class _ProfileCardState extends State<ProfileCard> {
               const SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Add message functionality
+                  // get chatid function
+                  // navigate to chat page
+                  ChatService().getChatId(
+                    Provider.of<AuthProvider>(context, listen: false).user!.uid,
+                    widget.uid,
+                  ).then((chatId) {
+                    Navigator.of(context).pushNamed(
+                      '/chats/$chatId',
+                    );
+                  });
                 },
                 icon: const Icon(Icons.message, size: 18),
                 label: const Text('تواصل'),
