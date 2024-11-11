@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:to_rent/pages/chat_details.dart';
 import 'package:to_rent/services/firestore_service.dart';
 import 'package:to_rent/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
@@ -287,9 +288,13 @@ class _ProfileCardState extends State<ProfileCard> {
                     Provider.of<AuthProvider>(context, listen: false).user!.uid,
                     widget.uid,
                   ).then((chatId) {
-                    Navigator.of(context).pushNamed(
-                      '/chats/$chatId',
-                    );
+                    Navigator.push(context, MaterialPageRoute(builder: (context) {
+                      return ChatScreen(
+                        chatId: chatId,
+                        otherUsername: widget.username,
+                        otherProfilePicture: profilePicture,
+                      );
+                    }));
                   });
                 },
                 icon: const Icon(Icons.message, size: 18),

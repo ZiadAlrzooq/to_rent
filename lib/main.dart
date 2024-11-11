@@ -60,19 +60,6 @@ class MyApp extends StatelessWidget {
             ),
           );
         }
-        // Habdle /chats/{id}
-        if (uri.pathSegments.length == 2 && uri.pathSegments.first == 'chats') {
-          final chatId = uri.pathSegments[1];
-          return MaterialPageRoute(
-            builder: (context) => ProtectedRoute(
-              child: ChatScreen(
-                currentUserId: '',
-                otherUserId: '',
-                chatId: chatId,
-              ),
-            ),
-          );
-        }
         switch (settings.name) {
           case '/':
             return MaterialPageRoute(builder: (context) => HomePage());

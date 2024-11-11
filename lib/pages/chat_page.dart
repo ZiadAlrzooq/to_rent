@@ -87,8 +87,9 @@ class ChatsPage extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => ChatScreen(
-                              currentUserId: currentUserId,
-                              otherUserId: otherUserId,
+                              otherProfilePicture: pfpUrl,
+                              otherUsername: username,
+                              chatId: chatId,
                             ),
                           ),
                         );
