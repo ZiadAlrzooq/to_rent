@@ -68,7 +68,7 @@ class _ProfileFeedState extends State<ProfileFeed> {
                       ratingCount: profileData['ratingCount'],
                     ),
                     // Posts Card
-                    const PostsCard(),
+                    PostsCard(posts: profileData['posts']),
                   ],
                 ),
               );
@@ -317,11 +317,11 @@ class _ProfileCardState extends State<ProfileCard> {
 }
 
 class PostsCard extends StatelessWidget {
-  const PostsCard({Key? key}) : super(key: key);
+  final List<dynamic> posts;
+  const PostsCard({Key? key, required this.posts}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    print('Building posts card');
     return Card(
       margin: const EdgeInsets.all(8.0),
       child: Column(
@@ -341,18 +341,13 @@ class PostsCard extends StatelessWidget {
           ),
           Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              PostCard(
-                imageUrl: 'assets/vase.jpg',
-                description:
-                    'مزهرية سيراميك مصنوعة يدوياً، تضيف لمسة من الأناقة لأي غرفة.',
-              ),
-              PostCard(
-                imageUrl: 'assets/handbag.jpg',
-                description:
-                    'حقيبة يد جلدية أنيقة مع تفاصيل ذهبية، ملحق مثالي لأي مناسبة.',
-              ),
-            ],
+            children: posts.map((post) {
+              return PostCard(
+                postId: post['postId'],
+                imageUrl: post['image'],
+                title: post['title'],
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -361,42 +356,49 @@ class PostsCard extends StatelessWidget {
 }
 
 class PostCard extends StatelessWidget {
+  final String postId;
   final String imageUrl;
-  final String description;
+  final String title;
 
   const PostCard({
     Key? key,
+    required this.postId,
     required this.imageUrl,
-    required this.description,
+    required this.title,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Image.asset(
-                imageUrl,
-                fit: BoxFit.cover,
+    return InkWell(
+      onTap: () {
+        Navigator.pushNamed(context, '/posts/$postId');
+      },
+      child: Card(
+        margin: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Text(
-              description,
-              style: const TextStyle(fontSize: 16),
-              textDirection: TextDirection.rtl,
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Text(
+                title,
+                style: const TextStyle(fontSize: 16),
+                textDirection: TextDirection.rtl,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

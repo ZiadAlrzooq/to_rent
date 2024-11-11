@@ -52,6 +52,21 @@ class FirestoreService {
         ? 0
         : (ratings.reduce((a, b) => a + b) / ratingCount).round();
 
+    // get posts title and first image
+    final postsQuery = await FirebaseFirestore.instance
+        .collection('posts')
+        .where('posterId', isEqualTo: uid)
+        .get();
+
+    final posts = postsQuery.docs.map((doc) {
+      final data = doc.data();
+      return {
+        'postId': doc.id,
+        'title': data['title'],
+        'image': data['imageUrls'][0],
+      };
+    }).toList();
+
     // Combine the data into a single map
     final profileData = {
       'uid': uid,
@@ -59,6 +74,7 @@ class FirestoreService {
       'profilePicture': userDoc.data()?['profilePicture'] ?? '',
       'rating': averageRating,
       'ratingCount': ratingCount,
+      'posts': posts,
     };
 
     return profileData;
