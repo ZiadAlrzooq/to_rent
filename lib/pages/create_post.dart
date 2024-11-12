@@ -163,6 +163,15 @@ class _RentalPostFormState extends State<RentalPostForm> {
     return uploadedUrls;
   }
 
+  List<String> extractTrigrams(String text) {
+  text = text.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  List<String> trigrams = [];
+  for (int i = 0; i < text.length - 2; i++) {
+    trigrams.add(text.substring(i, i + 3));
+  }
+  return trigrams;
+}
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
     if (_imageFiles.isEmpty && _existingImageUrls.isEmpty) {
@@ -190,6 +199,7 @@ class _RentalPostFormState extends State<RentalPostForm> {
           'location': _selectedLocation,
           'imageUrls': allImageUrls,
           'phoneNumber': _phoneNumberController.text,
+          'trigrams': extractTrigrams(_titleController.text),
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تم تحديث الإعلان')),
@@ -206,6 +216,7 @@ class _RentalPostFormState extends State<RentalPostForm> {
           'location': _selectedLocation,
           'imageUrls': allImageUrls,
           'phoneNumber': _phoneNumberController.text,
+          'trigrams': extractTrigrams(_titleController.text),
           'createdDate': FieldValue.serverTimestamp(),
         });
         postId = postRef.id;

@@ -12,6 +12,7 @@ class Posts extends StatefulWidget {
 
 class _PostsState extends State<Posts> {
   List<Map<String, dynamic>> posts = [];
+  TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
@@ -20,6 +21,7 @@ class _PostsState extends State<Posts> {
     fetchPosts();
   }
 
+  // Fetch all posts initially
   void fetchPosts() async {
     QuerySnapshot querySnapshot =
         await FirebaseFirestore.instance.collection('posts').get();
@@ -35,6 +37,45 @@ class _PostsState extends State<Posts> {
     });
   }
 
+  // Search function triggered by the button click
+  void searchPosts() async {
+    String searchText = searchController.text.trim();
+
+    if (searchText.isEmpty) {
+      // If search text is empty, fetch all posts
+      fetchPosts();
+      return;
+    }
+
+    List<String> trigrams = extractTrigrams(searchText);
+
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('posts')
+        .where('trigrams', arrayContainsAny: trigrams)
+        .get();
+
+    List<QueryDocumentSnapshot> documents = querySnapshot.docs;
+
+    setState(() {
+      posts = documents.map((doc) {
+        Map<String, dynamic> post = doc.data() as Map<String, dynamic>;
+        post['id'] = doc.id;
+        post['createdDate'] = (post['createdDate'])?.toDate();
+        return post;
+      }).toList();
+    });
+  }
+
+  // Helper function to extract trigrams
+  List<String> extractTrigrams(String text) {
+    text = text.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    List<String> trigrams = [];
+    for (int i = 0; i < text.length - 2; i++) {
+      trigrams.add(text.substring(i, i + 3));
+    }
+    return trigrams;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,19 +85,28 @@ class _PostsState extends State<Posts> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.right,
-              decoration: InputDecoration(
-                hintText: '...أبحث',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: searchController,
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.right,
+                    decoration: InputDecoration(
+                      hintText: '...أبحث',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              onChanged: (value) {
-                // Implement search functionality here
-              },
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: searchPosts,
+                  child: Text('بحث'),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -101,8 +151,6 @@ class _PostsState extends State<Posts> {
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.end,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
                                       children: [
                                         Text(
                                           posts[index]['title'],
@@ -117,15 +165,13 @@ class _PostsState extends State<Posts> {
                                           children: [
                                             Icon(Icons.person,
                                                 size: 16,
-                                                color: const Color.fromARGB(
-                                                    255, 0, 0, 0)),
+                                                color: Colors.black),
                                             SizedBox(width: 8),
                                             Text(
                                               username,
                                               style: TextStyle(
                                                   fontSize: 16,
                                                   color: Colors.grey),
-                                              textAlign: TextAlign.right,
                                             ),
                                             SizedBox(width: 16),
                                             Icon(Icons.access_time,
@@ -138,7 +184,6 @@ class _PostsState extends State<Posts> {
                                               style: TextStyle(
                                                   fontSize: 16,
                                                   color: Colors.grey),
-                                              textAlign: TextAlign.right,
                                             ),
                                           ],
                                         ),
@@ -155,7 +200,6 @@ class _PostsState extends State<Posts> {
                                                 style: TextStyle(
                                                     fontSize: 16,
                                                     color: Colors.grey),
-                                                textAlign: TextAlign.right,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
@@ -168,7 +212,6 @@ class _PostsState extends State<Posts> {
                                               style: TextStyle(
                                                   fontSize: 16,
                                                   color: Colors.grey),
-                                              textAlign: TextAlign.right,
                                             ),
                                             SizedBox(width: 4),
                                             Text(
@@ -176,7 +219,6 @@ class _PostsState extends State<Posts> {
                                               style: TextStyle(
                                                   fontSize: 16,
                                                   color: Colors.grey),
-                                              textAlign: TextAlign.right,
                                             ),
                                           ],
                                         ),
@@ -197,20 +239,15 @@ class _PostsState extends State<Posts> {
           ),
         ],
       ),
-      floatingActionButton: Container(
-        margin: const EdgeInsets.only(bottom: 16.0, right: 16.0),
-        child: FloatingActionButton(
-          onPressed: () {
-            // make it navigate to the new post page
-            Navigator.pushNamed(context, '/create-post');
-          },
-          child: Icon(Icons.add),
-          backgroundColor: Colors.blue,
-          shape: CircleBorder(),
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/create-post');
+        },
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
+
 //createdDate
