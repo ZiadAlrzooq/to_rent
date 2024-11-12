@@ -366,6 +366,50 @@ class _PostPageState extends State<PostPage> {
       arguments: rentalPost,
     );
   }
+  // it should prompt the user to confirm the deletion
+  void _deletePost() async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('حذف المنشور'),
+          content: Text('هل أنت متأكد من حذف المنشور؟'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  var firestoreService = FirestoreService(); // Create an instance
+                  await firestoreService.deletePost(widget.postId);
+                  Navigator.of(context).pushNamed('/posts');
+                  // Show a snackbar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('تم حذف المنشور بنجاح'),
+                    ),
+                  );
+                } catch (e) {
+                  print('Error deleting post: $e');
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('حدث خطأ في حذف المنشور'),
+                    ),
+                  );
+                }
+              },
+              child: Text('حذف'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -377,13 +421,30 @@ class _PostPageState extends State<PostPage> {
           title: Text('المنشور'),
           centerTitle: true,
           actions: [
-            if (FirebaseAuth.instance.currentUser?.uid ==
-                posterId) // Only show for post owner
-              IconButton(
-                icon: Icon(Icons.edit),
-                onPressed: _navigateToEdit,
-              ),
-          ],
+          if (FirebaseAuth.instance.currentUser?.uid == posterId) // Only show for post owner
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') {
+                  _navigateToEdit();
+                } else if (value == 'delete') {
+                  _deletePost();
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem<String>(
+                    value: 'edit',
+                    child: Text('تعديل المنشورة'),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Text('حذف المنشورة'),
+                  ),
+                ];
+              },
+              icon: Icon(Icons.more_vert),
+            ),
+        ],
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {

@@ -85,4 +85,10 @@ class FirestoreService {
     final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
     await userRef.update({'profilePicture': profilePicture});
   }
+
+  // delete post
+  Future<void> deletePost(String postId) async {
+    final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
+    await postRef.delete();
+  }
 }
