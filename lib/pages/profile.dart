@@ -116,11 +116,7 @@ class _ProfileCardState extends State<ProfileCard> {
   }
 
   Future<void> _updateRating(int newRating) async {
-    // TODO: Update rating to backend
-    // TODO: also update ratingCount
-    // TODO: show recent posts
-    await Future.delayed(Duration(seconds: 1));
-    print('Rating updated to backend: $newRating');
+    FirestoreService().updateRating(widget.uid, newRating);
   }
 
   void _onStarTapped(int rating) {
@@ -331,7 +327,7 @@ class PostsCard extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Text(
-              'العروض',
+              'الإعلانات',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,

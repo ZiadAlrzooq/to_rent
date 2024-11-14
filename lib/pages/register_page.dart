@@ -114,6 +114,12 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (value == null || value.isEmpty) {
                             return 'الرجاء إدخال اسم المستخدم';
                           }
+                          if (value.length < 3) {
+                            return 'يجب أن يحتوي اسم المستخدم على 3 أحرف على الأقل';
+                          }
+                          if (value.length > 20) {
+                            return 'يجب أن يحتوي اسم المستخدم على 20 حرف على الأكثر';
+                          }
                           if (_isUsernameTaken) {
                             return 'الاسم مستخدم من قبل. الرجاء اختيار اسم آخر';
                           }

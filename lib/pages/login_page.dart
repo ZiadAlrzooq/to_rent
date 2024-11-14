@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                     CustomButton(
                       text: 'العودة',
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pushReplacementNamed(context, '/');
                       },
                       color: Colors.teal[600]!,
                     ),

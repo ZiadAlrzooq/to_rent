@@ -13,60 +13,154 @@ class Posts extends StatefulWidget {
 class _PostsState extends State<Posts> {
   List<Map<String, dynamic>> posts = [];
   TextEditingController searchController = TextEditingController();
+  DocumentSnapshot? lastDocument;
+  bool isLoading = false;
+  bool hasMore = true;
+  bool isSearching = false;
+
+  final ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     timeago.setLocaleMessages('ar', timeago.ArMessages());
-    fetchPosts();
+    fetchPosts(isInitialLoad: true);
+
+    // Listener for infinite scrolling
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200) {
+        if (isSearching) {
+          searchPosts(paginate: true);
+        } else {
+          fetchPosts();
+        }
+      }
+    });
   }
 
-  // Fetch all posts initially
-  void fetchPosts() async {
-    QuerySnapshot querySnapshot =
-        await FirebaseFirestore.instance.collection('posts').get();
-    List<QueryDocumentSnapshot> documents = querySnapshot.docs;
+  @override
+  void dispose() {
+    scrollController.dispose();
+    searchController.dispose();
+    super.dispose();
+  }
 
+  // Fetch all posts with pagination
+  void fetchPosts({bool isInitialLoad = false}) async {
+    if (isLoading || !hasMore) return;
     setState(() {
-      posts = documents.map((doc) {
+      isLoading = true;
+    });
+
+    Query query = FirebaseFirestore.instance.collection('posts').orderBy('createdDate', descending: true).limit(10);
+
+    if (lastDocument != null && !isInitialLoad) {
+      query = query.startAfterDocument(lastDocument!);
+    }
+
+    QuerySnapshot querySnapshot = await query.get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      lastDocument = querySnapshot.docs.last;
+
+      List<Map<String, dynamic>> fetchedPosts = querySnapshot.docs.map((doc) {
         Map<String, dynamic> post = doc.data() as Map<String, dynamic>;
         post['id'] = doc.id;
         post['createdDate'] = (post['createdDate'])?.toDate();
         return post;
       }).toList();
+
+      setState(() {
+        if (isInitialLoad) {
+          posts = fetchedPosts;
+        } else {
+          posts.addAll(fetchedPosts);
+        }
+        hasMore = fetchedPosts.length == 10;
+      });
+    } else {
+      setState(() {
+        hasMore = false;
+      });
+    }
+
+    setState(() {
+      isLoading = false;
     });
   }
 
-  // Search function triggered by the button click
-  void searchPosts() async {
+  // Search posts with pagination and ranking
+  void searchPosts({bool paginate = false}) async {
     String searchText = searchController.text.trim();
 
     if (searchText.isEmpty) {
-      // If search text is empty, fetch all posts
-      fetchPosts();
+      // Reset search state and fetch all posts
+      isSearching = false;
+      lastDocument = null;
+      hasMore = true;
+      fetchPosts(isInitialLoad: true);
       return;
     }
 
+    if (isLoading || (!paginate && lastDocument != null)) return;
+    setState(() {
+      isLoading = true;
+      isSearching = true;
+    });
+
     List<String> trigrams = extractTrigrams(searchText);
 
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+    Query query = FirebaseFirestore.instance
         .collection('posts')
         .where('trigrams', arrayContainsAny: trigrams)
-        .get();
+        .orderBy('createdDate', descending: true)
+        .limit(10);
 
-    List<QueryDocumentSnapshot> documents = querySnapshot.docs;
+    if (lastDocument != null && paginate) {
+      query = query.startAfterDocument(lastDocument!);
+    }
 
-    setState(() {
-      posts = documents.map((doc) {
+    QuerySnapshot querySnapshot = await query.get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      lastDocument = querySnapshot.docs.last;
+
+      List<Map<String, dynamic>> rankedPosts = querySnapshot.docs.map((doc) {
         Map<String, dynamic> post = doc.data() as Map<String, dynamic>;
         post['id'] = doc.id;
         post['createdDate'] = (post['createdDate'])?.toDate();
+
+        // Calculate the score based on matching trigrams
+        List<String> postTrigrams = List<String>.from(post['trigrams']);
+        int score = trigrams.where((t) => postTrigrams.contains(t)).length;
+        post['score'] = score;
+
         return post;
       }).toList();
+
+      // Sort the posts by score in descending order
+      rankedPosts.sort((a, b) => b['score'].compareTo(a['score']));
+
+      setState(() {
+        if (!paginate) {
+          posts = rankedPosts;
+        } else {
+          posts.addAll(rankedPosts);
+        }
+        hasMore = rankedPosts.length == 10;
+      });
+    } else {
+      setState(() {
+        hasMore = false;
+      });
+    }
+
+    setState(() {
+      isLoading = false;
     });
   }
 
-  // Helper function to extract trigrams
+  // Extract trigrams from search text
   List<String> extractTrigrams(String text) {
     text = text.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
     List<String> trigrams = [];
@@ -103,7 +197,11 @@ class _PostsState extends State<Posts> {
                 ),
                 SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: searchPosts,
+                  onPressed: () {
+                    lastDocument = null;
+                    hasMore = true;
+                    searchPosts();
+                  },
                   child: Text('بحث'),
                 ),
               ],
@@ -111,6 +209,7 @@ class _PostsState extends State<Posts> {
           ),
           Expanded(
             child: ListView.builder(
+              controller: scrollController,
               itemCount: posts.length,
               itemBuilder: (context, index) {
                 return FutureBuilder<QuerySnapshot>(
@@ -249,5 +348,3 @@ class _PostsState extends State<Posts> {
     );
   }
 }
-
-//createdDate

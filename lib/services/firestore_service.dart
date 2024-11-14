@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:to_rent/services/auth_service.dart';
 
 class FirestoreService {
@@ -91,4 +92,20 @@ class FirestoreService {
     final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
     await postRef.delete();
   }
+
+  // update rating
+  Future<void> updateRating(String uid, int rating) async {
+    final String reviewerId = FirebaseAuth.instance.currentUser!.uid; // Get the current user's ID
+    final ratingRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('ratings')
+        .doc(reviewerId); // Use reviewerId as the document ID
+
+    await ratingRef.set({
+      'rating': rating,
+      'reviewerId': reviewerId, // Set the reviewerId
+    }, SetOptions(merge: true)); // Use merge to update if it exists
+  }
+
 }
