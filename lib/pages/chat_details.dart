@@ -97,28 +97,34 @@ class ChatScreen extends StatelessWidget {
                               ? CrossAxisAlignment.end
                               : CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 12),
-                              decoration: BoxDecoration(
-                                color:
-                                    isMe ? Colors.blue : Colors.grey.shade200,
-                                borderRadius: isMe
-                                    ? BorderRadius.only(
-                                        topLeft: Radius.circular(16),
-                                        topRight: Radius.circular(16),
-                                        bottomLeft: Radius.circular(16),
-                                      )
-                                    : BorderRadius.only(
-                                        topLeft: Radius.circular(16),
-                                        topRight: Radius.circular(16),
-                                        bottomRight: Radius.circular(16),
-                                      ),
-                              ),
-                              child: Text(
-                                message['content'],
-                                style: TextStyle(
-                                  color: isMe ? Colors.white : Colors.black,
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                  maxWidth:
+                                      MediaQuery.of(context).size.width * 0.75),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isMe ? Colors.blue : Colors.grey.shade200,
+                                  borderRadius: isMe
+                                      ? BorderRadius.only(
+                                          topLeft: Radius.circular(16),
+                                          topRight: Radius.circular(16),
+                                          bottomLeft: Radius.circular(16),
+                                        )
+                                      : BorderRadius.only(
+                                          topLeft: Radius.circular(16),
+                                          topRight: Radius.circular(16),
+                                          bottomRight: Radius.circular(16),
+                                        ),
+                                ),
+                                child: Text(
+                                  message['content'],
+                                  textDirection: TextDirection.rtl,
+                                  style: TextStyle(
+                                    color: isMe ? Colors.white : Colors.black,
+                                  ),
                                 ),
                               ),
                             ),
@@ -126,6 +132,7 @@ class ChatScreen extends StatelessWidget {
                             if (showTimestamp)
                               Text(
                                 messageTime,
+                                textDirection: TextDirection.rtl,
                                 style: TextStyle(color: Colors.grey),
                               ),
                           ],

@@ -10,21 +10,26 @@ class ChatsPage extends StatelessWidget {
   ChatsPage({required this.currentUserId});
 
   Future<Map<String, dynamic>> getUserInfo(String userId) async {
-    // Fetch profile picture from users collection
-    final userDoc =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    final pfp = userDoc['profilePicture'] ?? '';
+    try {
+      // Fetch profile picture from users collection
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final userData = userDoc.data();
+      final pfp = userData != null && userData.containsKey('profilePicture') ? userData['profilePicture'] : '';
 
-    // Fetch username from usernames collection
-    final usernameDoc = await FirebaseFirestore.instance
-        .collection('usernames')
-        .where('uid', isEqualTo: userId)
-        .limit(1)
-        .get();
-    final username =
-        usernameDoc.docs.isNotEmpty ? usernameDoc.docs[0].id : 'Unknown';
+      // Fetch username from usernames collection
+      final usernameDoc = await FirebaseFirestore.instance
+          .collection('usernames')
+          .where('uid', isEqualTo: userId)
+          .limit(1)
+          .get();
+      final username = usernameDoc.docs.isNotEmpty ? usernameDoc.docs[0].id : 'Unknown';
 
-    return {'username': username, 'pfp': pfp};
+      return {'username': username, 'pfp': pfp};
+    } catch (e) {
+      print('Error in getUserInfo for userId: $userId');
+      print(e);
+      throw e;
+    }
   }
 
   @override
@@ -69,18 +74,21 @@ class ChatsPage extends StatelessWidget {
                   return Card(
                     margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     child: ListTile(
-                      leading: CircleAvatar(
+                      trailing: CircleAvatar(
                         backgroundImage: pfpUrl.isNotEmpty
                             ? NetworkImage(pfpUrl)
                             : AssetImage('assets/default_pfp.png')
                                 as ImageProvider,
                       ),
                       title: Text(username,
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                          textDirection: TextDirection.rtl
+                          ),
                       subtitle: Text(
                         lastMessage,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        textDirection: TextDirection.rtl,
                       ),
                       onTap: () {
                         Navigator.push(
