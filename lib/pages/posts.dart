@@ -266,12 +266,16 @@ class _PostsState extends State<Posts> {
                                                 size: 16,
                                                 color: Colors.black),
                                             SizedBox(width: 8),
-                                            Text(
+                                            Flexible(
+                                            child: Text(
                                               username,
                                               style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: Colors.grey),
+                                                fontSize: 16,
+                                                color: Colors.grey,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
+                                          ),
                                             SizedBox(width: 16),
                                             Icon(Icons.access_time,
                                                 size: 16, color: Colors.grey),
