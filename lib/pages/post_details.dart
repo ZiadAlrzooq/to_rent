@@ -683,11 +683,12 @@ class _PostPageState extends State<PostPage> {
                                                           children: [
                                                             CircleAvatar(
                                                               radius: 16,
-                                                              backgroundImage:
-                                                                  CachedNetworkImageProvider(
-                                                                comment
-                                                                    .profilePicture,
-                                                              ),
+                                                              backgroundImage: comment.profilePicture.isNotEmpty
+                                                                  ? NetworkImage(comment.profilePicture)
+                                                                  : null,
+                                                              child: comment.profilePicture.isEmpty
+                                                                  ? Icon(Icons.person)
+                                                                  : null,
                                                             ),
                                                             SizedBox(width: 8),
                                                             Text(
